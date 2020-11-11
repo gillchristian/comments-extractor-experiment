@@ -9,6 +9,11 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^14.14.7",
+    "ts-node": "^9.0.0",
     "typescript": "^4.0.5"
+  },
+  "dependencies": {
+    "fp-ts": "^2.8.5",
+    "parser-ts": "^0.6.11"
   }
 }
