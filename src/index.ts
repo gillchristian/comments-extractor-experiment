@@ -42,6 +42,8 @@ const singleQuotedString: P.Parser<string, String> = P.surroundedBy(C.char("'"))
   S.many(P.either(S.string("\\'"), () => C.notChar("'")))
 )
 
+const anyChar = P.sat<string>((_) => true)
+
 const lineCommentStart = S.string("//")
 
 const blockCommentStart = S.string("/*")
@@ -59,20 +61,12 @@ const lineComment = pipe(
 )
 
 const blockComment = pipe(
-  P.seq(blockCommentStart, () =>
-    P.manyTill(
-      P.sat((_) => true),
-      blockCommentEnd
-    )
-  ),
+  P.seq(blockCommentStart, () => P.manyTill(anyChar, blockCommentEnd)),
   P.map((chars) => chars.join("")),
   P.map(mkBlockComment)
 )
 
-const anyChar = pipe(
-  P.sat<string>((_) => true),
-  P.map(mkChar)
-)
+const char = pipe(anyChar, P.map(mkChar))
 
 const stringLit = pipe(
   S.doubleQuotedString,
@@ -80,17 +74,17 @@ const stringLit = pipe(
   P.map(mkStringLiteral)
 )
 
-const commentOrChar: P.Parser<string, Code[]> = P.many(
+const code: P.Parser<string, Code[]> = P.many(
   pipe(
     lineComment,
     P.alt<string, Comment>(() => blockComment),
     P.alt<string, Code>(() => stringLit),
-    P.alt<string, Code>(() => anyChar)
+    P.alt<string, Code>(() => char)
   )
 )
 
-const onlyLines = pipe(
-  commentOrChar,
+const parseCommentsFromCode: P.Parser<string, Comment[]> = pipe(
+  code,
   P.map((tokens) => tokens.filter(isComment))
 )
 
@@ -105,8 +99,9 @@ const input = `contract Foo {}
 /* block comment */
 contract Contract /* inlined block comment */ {
     function foo(/* another inline comment */) public {
-        string s = "// \"double quotes";
-        string s2 = '// \'single quotes';
+        string s = "// \\"double quotes";
+        // a comment here in between strings
+        string s2 = '// \\'single quotes';
     }
 }
 `
@@ -114,7 +109,7 @@ contract Contract /* inlined block comment */ {
 pipe(
   input.split(""),
   stream.stream,
-  onlyLines,
+  parseCommentsFromCode,
   E.fold(
     (error) => console.log({error}),
     (result) => console.log(result.value)
