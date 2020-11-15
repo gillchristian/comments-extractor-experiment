@@ -3,7 +3,7 @@ import {pipe} from "fp-ts/function"
 import * as P from "parser-ts/Parser"
 import * as C from "parser-ts/char"
 import * as S from "parser-ts/string"
-import {stream} from "parser-ts"
+import {stream} from "parser-ts/Stream"
 
 interface LineComment {
   type: "LineComment"
@@ -69,21 +69,21 @@ const blockComment = pipe(
 const char = pipe(anyChar, P.map(mkChar))
 
 const stringLit = pipe(
-  S.doubleQuotedString,
-  P.alt(() => singleQuotedString),
+  P.either(S.doubleQuotedString, () => singleQuotedString),
   P.map(mkStringLiteral)
 )
 
+const comment = P.either<string, Comment>(lineComment, () => blockComment)
+
 const code: P.Parser<string, Code[]> = P.many(
   pipe(
-    lineComment,
-    P.alt<string, Comment>(() => blockComment),
+    comment,
     P.alt<string, Code>(() => stringLit),
-    P.alt<string, Code>(() => char)
+    P.alt(() => char)
   )
 )
 
-const parseCommentsFromCode: P.Parser<string, Comment[]> = pipe(
+const allComments: P.Parser<string, Comment[]> = pipe(
   code,
   P.map((tokens) => tokens.filter(isComment))
 )
@@ -108,8 +108,8 @@ contract Contract /* inlined block comment */ {
 
 pipe(
   input.split(""),
-  stream.stream,
-  parseCommentsFromCode,
+  stream,
+  allComments,
   E.fold(
     (error) => console.log({error}),
     (result) => console.log(result.value)
