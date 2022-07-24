@@ -1,0 +1,58 @@
+[
+    {
+      "type": "LineComment",
+      "value": "line comment",
+      "range": [
+        0,
+        15
+      ],
+      "loc": {
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 1,
+          "column": 15
+        }
+      },
+      "raw": " line comment"
+    },
+    {
+      "type": "BlockComment",
+      "value": "block comment",
+      "range": [
+        17,
+        36
+      ],
+      "loc": {
+        "start": {
+          "line": 3,
+          "column": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 19
+        }
+      },
+      "codeStart": 37,
+      "raw": " block comment ",
+      "code": {
+        "value": "contract Contract {",
+        "range": [
+          37,
+          56
+        ],
+        "loc": {
+          "start": {
+            "line": 4,
+            "column": 0
+          },
+          "end": {
+            "line": 4,
+            "column": 19
+          }
+        }
+      }
+    }
+  ]
